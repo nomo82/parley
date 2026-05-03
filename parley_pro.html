@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>⚽ PARLEY PRO 2.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;700;800;900&family=Barlow:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#06090f;--bg2:#0b1220;--card:#0d1928;--border:#162336;
+  --text:#dde6f0;--muted:#3d5570;
+  --claude:#00d4ff;--deep2:#a855f7;
+  --green:#00e676;--red:#ff4757;--gold:#ffc107;--orange:#ff8c00;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;max-width:500px;margin:0 auto;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 20% 10%,rgba(0,212,255,.05) 0%,transparent 50%),radial-gradient(ellipse at 80% 90%,rgba(124,58,237,.04) 0%,transparent 50%);pointer-events:none;z-index:0}
+
+.header{background:linear-gradient(180deg,#0a1425,#06090f);padding:16px 16px 12px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:200;backdrop-filter:blur(20px)}
+.logo-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:3px}
+.logo-text{font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:900;letter-spacing:3px;background:linear-gradient(135deg,var(--claude),var(--deep2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.logo-badge{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;background:linear-gradient(90deg,var(--claude),var(--deep2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-align:center;text-transform:uppercase}
+
+.status-bar{display:flex;gap:6px;padding:8px 12px;background:var(--bg2);border-bottom:1px solid var(--border);align-items:center}
+.chip{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.5px;border:1px solid;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase}
+.chip-c{color:var(--claude);border-color:rgba(0,212,255,.3);background:rgba(0,212,255,.07)}
+.chip-d{color:var(--deep2);border-color:rgba(168,85,247,.3);background:rgba(124,58,237,.07)}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.dot.pulse{animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+
+.tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:87px;z-index:199}
+.tab{flex:1;padding:12px 2px;background:none;border:none;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:.5px;cursor:pointer;transition:all .2s;border-bottom:2px solid transparent}
+.tab.active{color:var(--claude);border-bottom-color:var(--claude);background:rgba(0,212,255,.04)}
+
+.panel{display:none;padding-bottom:40px;animation:fadeUp .25s ease}
+.panel.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* EMPTY STATE */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;text-align:center}
+.empty-ico{font-size:50px;margin-bottom:14px;opacity:.45}
+.empty-tit{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:var(--muted);letter-spacing:1px;margin-bottom:8px}
+.empty-dsc{font-size:12px;color:var(--muted);line-height:1.7;max-width:260px}
+.empty-arr{margin-top:14px;font-size:13px;color:var(--claude);font-weight:700;animation:bounce .9s ease-in-out infinite alternate}
+@keyframes bounce{from{transform:translateY(0)}to{transform:translateY(7px)}}
+
+/* TOOLBAR */
+.toolbar{display:flex;align-items:center;justify-content:space-between;padding:10px 12px 0}
+.toolbar-info{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+
+/* LIGA */
+.liga{display:flex;align-items:center;gap:8px;background:linear-gradient(90deg,rgba(0,212,255,.07),transparent);border-left:3px solid var(--claude);padding:10px 16px;margin-top:10px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;letter-spacing:1.5px;color:var(--claude);text-transform:uppercase}
+
+/* MATCH CARD */
+.mc{background:var(--card);margin:7px 11px;border-radius:14px;padding:13px;border:1px solid var(--border);position:relative;overflow:hidden}
+.mc::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--claude),transparent);opacity:.2}
+.mc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+.mc-time{font-size:11px;color:var(--muted);font-weight:600}
+.mc-risk{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:.8px;padding:3px 9px;border-radius:20px;text-transform:uppercase}
+.mc-teams{display:flex;align-items:center;gap:8px;margin-bottom:11px}
+.mc-team{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;flex:1;line-height:1.1}
+.mc-team.r{text-align:right}
+.mc-vs{background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:3px 7px;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:900;color:var(--muted);letter-spacing:1px}
+.odds{display:flex;gap:5px;margin-bottom:9px}
+.odd{flex:1;border-radius:9px;padding:8px 3px;text-align:center;border:1px solid var(--border);background:rgba(255,255,255,.02)}
+.odd.hot{background:rgba(0,212,255,.09);border-color:var(--claude)}
+.odd-l{font-size:8px;color:var(--muted);font-weight:600;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px}
+.odd-v{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;line-height:1}
+.odd.hot .odd-v{color:var(--claude)}
+.odd-p{font-size:9px;font-weight:600;margin-top:1px;color:var(--muted)}
+.odd.hot .odd-p{color:var(--green)}
+.pick{background:rgba(0,212,255,.04);border:1px solid rgba(0,212,255,.12);border-radius:8px;padding:8px 11px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.pick-l{color:var(--muted);font-size:10px;font-weight:600}
+.pick-v{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--claude)}
+
+/* PARLAY */
+.p-sec{padding:12px}
+.stake-row{display:flex;gap:8px;margin-bottom:14px;align-items:flex-end}
+.stake-box{flex:1}
+.s-lbl{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:7px}
+.stake-in{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:11px 13px;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;outline:none;transition:border-color .2s}
+.stake-in:focus{border-color:var(--claude)}
+.pcard{background:var(--card);border-radius:14px;border:1px solid;padding:15px;margin-bottom:13px}
+.p-tit{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;letter-spacing:1px;margin-bottom:11px;text-transform:uppercase}
+.pp{display:flex;align-items:center;gap:7px;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px}
+.pp:last-of-type{border-bottom:none}
+.pp-m{flex:1;color:var(--muted)}
+.pp-w{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700}
+.p-foot{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:13px;padding-top:11px;border-top:1px solid var(--border)}
+.pf-l{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.pf-v{font-family:'Barlow Condensed',sans-serif;font-size:21px;font-weight:800;line-height:1.1}
+.pay-box{grid-column:1/-1;background:rgba(0,0,0,.3);border-radius:9px;padding:11px;margin-top:3px}
+.pay-l{font-size:9px;color:var(--muted);margin-bottom:3px}
+.pay-v{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;line-height:1}
+.pay-pr{font-size:12px;font-weight:600;margin-top:1px}
+.disc{background:rgba(255,71,87,.04);border:1px solid rgba(255,71,87,.15);border-radius:10px;padding:11px;font-size:10px;color:var(--muted);text-align:center;line-height:1.6;margin-top:4px}
+
+/* AI */
+.ai-sec{padding:12px}
+.keys-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:14px}
+.keys-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.keys-tit{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;letter-spacing:1px;text-transform:uppercase}
+.key-acts{display:flex;gap:6px}
+.key-row{margin-bottom:12px}
+.key-row:last-child{margin-bottom:0}
+.key-lbl{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
+.kb{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:800;padding:2px 7px;border-radius:10px;letter-spacing:.5px}
+.kb-c{background:rgba(0,212,255,.15);color:var(--claude);border:1px solid rgba(0,212,255,.3)}
+.kb-d{background:rgba(124,58,237,.15);color:var(--deep2);border:1px solid rgba(124,58,237,.3)}
+.kb-p{background:rgba(0,230,118,.12);color:var(--green);border:1px solid rgba(0,230,118,.25)}
+.key-in{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:9px 12px;font-size:12px;font-family:monospace;outline:none;transition:border-color .2s}
+.key-in:focus{border-color:var(--claude)}
+.key-hint{font-size:9px;color:var(--muted);margin-top:3px}
+.key-saved{display:none;background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.3);border-radius:8px;padding:8px 12px;font-size:11px;color:var(--green);text-align:center;font-weight:700;margin-bottom:10px}
+
+.dz{border:2px dashed var(--border);border-radius:14px;padding:26px 14px;text-align:center;cursor:pointer;background:var(--card);transition:all .2s;margin-bottom:13px;min-height:130px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.dz:hover,.dz.drag-over{border-color:var(--claude);background:rgba(0,212,255,.04)}
+.dz-ico{font-size:40px;margin-bottom:8px}
+.dz-txt{font-size:14px;color:var(--muted);font-weight:600}
+.dz-hint{font-size:10px;color:var(--muted);margin-top:4px;opacity:.6}
+.prev{max-width:100%;max-height:220px;border-radius:10px;object-fit:contain}
+
+/* BUTTONS */
+.btn-main{width:100%;padding:15px;background:linear-gradient(135deg,#0066cc,var(--claude));border:none;border-radius:12px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:900;letter-spacing:2px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:9px}
+.btn-main:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,212,255,.25)}
+.btn-main:disabled{opacity:.45;cursor:not-allowed}
+.btn-red{background:transparent;border:1px solid rgba(255,71,87,.4);border-radius:8px;color:var(--red);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;letter-spacing:.5px;padding:7px 12px;cursor:pointer;transition:all .2s;white-space:nowrap}
+.btn-red:hover{background:rgba(255,71,87,.1);border-color:var(--red)}
+.btn-blue{background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.25);border-radius:7px;color:var(--claude);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;padding:6px 11px;cursor:pointer;transition:all .2s}
+.btn-blue:hover{background:rgba(0,212,255,.18)}
+.btn-eye{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;margin-left:auto;padding:0}
+
+/* PROGRESS */
+.prog-box{display:none;padding:14px;margin-top:12px;background:var(--card);border:1px solid var(--border);border-radius:12px}
+.prog-tit{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:10px}
+.step{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px}
+.step:last-child{border-bottom:none}
+.step-i{font-size:16px;width:22px;text-align:center;flex-shrink:0}
+.step-n{flex:1;font-weight:600}
+.step-s{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:.5px;text-align:right;max-width:130px}
+
+/* TOKEN BANNER */
+.tok-ban{display:none;background:linear-gradient(135deg,rgba(255,71,87,.1),rgba(255,140,0,.06));border:1px solid rgba(255,71,87,.35);border-left:4px solid var(--red);border-radius:12px;padding:13px;margin-bottom:13px}
+.tok-tit{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;color:var(--red);margin-bottom:5px}
+.tok-bod{font-size:11px;color:#ff9a9a;line-height:1.6}
+
+/* RESULT CARDS */
+.res-area{margin-top:13px}
+.res-card{border-radius:14px;border:1px solid;padding:14px;margin-bottom:12px}
+.res-hdr{display:flex;align-items:center;gap:9px;margin-bottom:10px;padding-bottom:9px;border-bottom:1px solid var(--border)}
+.res-name{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;letter-spacing:1px;text-transform:uppercase}
+.res-role{font-size:10px;color:var(--muted);font-weight:600}
+.res-body{font-size:12px;line-height:1.9;white-space:pre-wrap;word-break:break-word;color:#c8d8e8}
+.rc{border-color:rgba(0,212,255,.25);background:rgba(0,212,255,.03)}
+.rd{border-color:rgba(124,58,237,.25);background:rgba(124,58,237,.03)}
+.con-box{background:linear-gradient(135deg,rgba(0,230,118,.06),rgba(0,212,255,.04));border:1px solid rgba(0,230,118,.2);border-radius:14px;padding:14px;margin-bottom:12px}
+.con-tit{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;letter-spacing:1px;color:var(--green);text-transform:uppercase;margin-bottom:9px}
+.con-bod{font-size:12px;line-height:1.8;color:#b8e8c8;white-space:pre-wrap}
+
+.spinner{width:14px;height:14px;border:2px solid rgba(0,0,0,.2);border-top-color:rgba(0,0,0,.8);border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo-row">
+    <span style="font-size:26px">⚽</span>
+    <span class="logo-text">PARLEY PRO</span>
+    <span style="font-size:14px;opacity:.4">2.0</span>
+  </div>
+  <div class="logo-badge">Doble Motor IA — Claude + DeepSeek</div>
+</div>
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <div class="chip chip-c">
+    <span class="dot" id="dot-c" style="background:var(--muted)"></span>
+    Claude <span id="lbl-c">Listo</span>
+  </div>
+  <div class="chip chip-d">
+    <span class="dot" id="dot-d" style="background:var(--muted)"></span>
+    DeepSeek <span id="lbl-d">Listo</span>
+  </div>
+  <span id="mcnt" style="margin-left:auto;font-size:9px;color:var(--muted)"></span>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="showTab('partidos',this)">📅 Partidos</button>
+  <button class="tab"        onclick="showTab('parley',this)">🎯 Parlays</button>
+  <button class="tab"        onclick="showTab('ia',this)">🤖 Doble IA</button>
+</div>
+
+<!-- ══ PARTIDOS ══ -->
+<div class="panel active" id="panel-partidos">
+  <div class="toolbar">
+    <span class="toolbar-info" id="info-partidos">Sin datos cargados</span>
+    <button class="btn-red" onclick="limpiarTodo()">🗑️ Limpiar todo</button>
+  </div>
+  <div id="cont-partidos">
+    <div class="empty">
+      <div class="empty-ico">📋</div>
+      <div class="empty-tit">SIN PARTIDOS</div>
+      <div class="empty-dsc">Andá a <strong style="color:var(--claude)">🤖 Doble IA</strong>, cargá una imagen con las cuotas y los partidos aparecerán aquí automáticamente.</div>
+      <div class="empty-arr">↓ Ir a Doble IA</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PARLAYS ══ -->
+<div class="panel" id="panel-parley">
+  <div class="p-sec">
+    <div class="stake-row">
+      <div class="stake-box">
+        <div class="s-lbl">💵 Monto a apostar</div>
+        <input type="number" class="stake-in" id="stakeInput" value="10000" oninput="renderParlays()">
+      </div>
+      <button class="btn-red" onclick="limpiarTodo()">🗑️ Limpiar</button>
+    </div>
+    <div id="cont-parlay">
+      <div class="empty">
+        <div class="empty-ico">🎰</div>
+        <div class="empty-tit">SIN PARLAYS</div>
+        <div class="empty-dsc">Los parlays se generan automáticamente cuando analizás una imagen en <strong style="color:var(--claude)">🤖 Doble IA</strong>.</div>
+        <div class="empty-arr">↓ Ir a Doble IA</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DOBLE IA ══ -->
+<div class="panel" id="panel-ia">
+  <div class="ai-sec">
+
+    <div class="keys-box">
+      <div class="keys-hdr">
+        <div class="keys-tit">🔑 API Keys</div>
+        <div class="key-acts">
+          <button class="btn-blue" onclick="guardarKeys()">💾 Guardar</button>
+          <button class="btn-red"  onclick="borrarKeys()">🗑️ Borrar</button>
+        </div>
+      </div>
+      <div class="key-saved" id="ksb">✅ Claves guardadas en este dispositivo</div>
+
+      <div class="key-row">
+        <div class="key-lbl">
+          <span class="kb kb-c">Claude</span>
+          <span style="color:var(--claude)">Anthropic</span>
+          <span class="kb kb-p">PRIMARIO</span>
+          <button class="btn-eye" onclick="toggleKey('ck')">👁️</button>
+        </div>
+        <input type="password" class="key-in" id="ck" placeholder="sk-ant-api03-...">
+        <div class="key-hint">→ console.anthropic.com → API Keys</div>
+      </div>
+
+      <div class="key-row">
+        <div class="key-lbl">
+          <span class="kb kb-d">DeepSeek</span>
+          <span style="color:var(--deep2)">DeepSeek AI</span>
+          <span style="font-size:9px;color:var(--green);font-weight:700">5M gratis</span>
+          <button class="btn-eye" onclick="toggleKey('dk')">👁️</button>
+        </div>
+        <input type="password" class="key-in" id="dk" placeholder="sk-...">
+        <div class="key-hint">→ platform.deepseek.com → API Keys</div>
+      </div>
+    </div>
+
+    <div class="dz" id="dz"
+         onclick="document.getElementById('fi').click()"
+         ondrop="onDrop(event)"
+         ondragover="onDragOver(event)"
+         ondragleave="onDragLeave(event)">
+      <div class="dz-ico">📸</div>
+      <div class="dz-txt">Tocá o arrastrá la imagen de cuotas</div>
+      <div class="dz-hint">JPG, PNG — cualquier casa de apuestas</div>
+    </div>
+    <input type="file" id="fi" accept="image/*" style="display:none" onchange="onFile(event)">
+
+    <button class="btn-main" id="btnRun" onclick="runAnalysis()" disabled>
+      🔍 ANALIZAR CON CLAUDE + DEEPSEEK
+    </button>
+
+    <div class="prog-box" id="progBox">
+      <div class="prog-tit">Procesando análisis dual...</div>
+      <div class="step"><span class="step-i" id="si1">⏳</span><span class="step-n" style="color:var(--claude)">Claude — Análisis + Extracción JSON</span><span class="step-s" id="ss1" style="color:var(--muted)">Esperando...</span></div>
+      <div class="step"><span class="step-i" id="si2">⏳</span><span class="step-n" style="color:var(--deep2)">DeepSeek — Validación cruzada</span><span class="step-s" id="ss2" style="color:var(--muted)">En cola...</span></div>
+      <div class="step"><span class="step-i" id="si3">⏳</span><span class="step-n" style="color:var(--green)">Auto-llenando Partidos y Parlays</span><span class="step-s" id="ss3" style="color:var(--muted)">Pendiente...</span></div>
+    </div>
+
+    <div id="resArea" style="display:none">
+      <div class="tok-ban" id="tokBan">
+        <div class="tok-tit">⚠️ TOKENS CLAUDE AGOTADOS</div>
+        <div class="tok-bod">Claude no pudo analizar por falta de créditos.<br><span style="color:var(--deep2);font-weight:700">✅ Disponible solo con DeepSeek.</span><br>Recargá en <strong>console.anthropic.com</strong></div>
+      </div>
+      <div class="con-box" id="conBox" style="display:none">
+        <div class="con-tit">🤝 Consenso Claude + DeepSeek</div>
+        <div class="con-bod" id="conBod"></div>
+      </div>
+      <div class="res-card rc" id="cCard" style="display:none">
+        <div class="res-hdr">
+          <span style="font-size:22px">🧠</span>
+          <div><div class="res-name" style="color:var(--claude)">Claude</div><div class="res-role">Análisis primario + extracción de datos</div></div>
+          <span style="margin-left:auto;font-size:10px;color:var(--muted)" id="cTok"></span>
+        </div>
+        <div class="res-body" id="cBod"></div>
+      </div>
+      <div class="res-card rd" id="dCard" style="display:none">
+        <div class="res-hdr">
+          <span style="font-size:22px">🔮</span>
+          <div><div class="res-name" style="color:var(--deep2)">DeepSeek</div><div class="res-role">Validación cruzada</div></div>
+        </div>
+        <div class="res-body" id="dBod"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STATE ─────────────────────────────────────────────
+let GRUPOS=[], imgB64=null, imgMime='image/jpeg';
+
+// ── MATH ──────────────────────────────────────────────
+const prob=o=>(1/o)*100;
+const fmtp=p=>p.toFixed(1)+'%';
+const favOf=m=>{const p1=prob(m.o1),p2=prob(m.o2);return p1>=p2?{name:m.local,odd:m.o1,p:p1}:{name:m.visit,odd:m.o2,p:p2}};
+const riskOf=p=>{
+  if(p>=62)return{label:'BAJO',color:'#00e676',bg:'rgba(0,230,118,.12)'};
+  if(p>=52)return{label:'MEDIO',color:'#ffc107',bg:'rgba(255,193,7,.10)'};
+  if(p>=44)return{label:'ALTO',color:'#ff8c00',bg:'rgba(255,140,0,.12)'};
+  return{label:'MUY ALTO',color:'#ff4757',bg:'rgba(255,71,87,.12)'};
+};
+const stars=p=>p>=62?'⭐⭐⭐':p>=52?'⭐⭐':p>=44?'⭐':'⚠️';
+
+// ── RENDER PARTIDOS ───────────────────────────────────
+function renderPartidos(){
+  const c=document.getElementById('cont-partidos');
+  const i=document.getElementById('info-partidos');
+  if(!GRUPOS.length){
+    i.textContent='Sin datos cargados';
+    document.getElementById('mcnt').textContent='';
+    c.innerHTML=`<div class="empty"><div class="empty-ico">📋</div><div class="empty-tit">SIN PARTIDOS</div><div class="empty-dsc">Andá a <strong style="color:var(--claude)">🤖 Doble IA</strong>, cargá una imagen y los partidos aparecerán aquí automáticamente.</div><div class="empty-arr">↓ Ir a Doble IA</div></div>`;
+    return;
+  }
+  const tot=GRUPOS.reduce((a,g)=>a+g.matches.length,0);
+  i.textContent=`${tot} partido${tot!==1?'s':''} cargado${tot!==1?'s':''}`;
+  document.getElementById('mcnt').textContent=`${tot} partidos`;
+  let h='';
+  GRUPOS.forEach(g=>{
+    h+=`<div class="liga">${g.liga}</div>`;
+    g.matches.forEach(m=>{
+      const p1=prob(m.o1),px=prob(m.ox||3.5),p2=prob(m.o2);
+      const fav=favOf(m),r=riskOf(fav.p);
+      h+=`<div class="mc">
+        <div class="mc-top"><span class="mc-time">${m.hora||''}</span><span class="mc-risk" style="color:${r.color};background:${r.bg}">RIESGO ${r.label}</span></div>
+        <div class="mc-teams"><span class="mc-team">${m.local}</span><span class="mc-vs">VS</span><span class="mc-team r">${m.visit}</span></div>
+        <div class="odds">
+          <div class="odd ${p1>=p2&&p1>=px?'hot':''}"><div class="odd-l">${m.local.split(' ')[0]}</div><div class="odd-v">${m.o1}</div><div class="odd-p">${fmtp(p1)}</div></div>
+          <div class="odd ${px>p1&&px>p2?'hot':''}"><div class="odd-l">Empate</div><div class="odd-v">${m.ox||'?'}</div><div class="odd-p">${fmtp(px)}</div></div>
+          <div class="odd ${p2>p1&&p2>=px?'hot':''}"><div class="odd-l">${m.visit.split(' ')[0]}</div><div class="odd-v">${m.o2}</div><div class="odd-p">${fmtp(p2)}</div></div>
+        </div>
+        <div class="pick"><span class="pick-l">🎯 PICK:</span><span class="pick-v">${fav.name} (${fav.odd})</span><span>${stars(fav.p)}</span><span style="color:var(--muted);font-size:11px">${fmtp(fav.p)}</span></div>
+      </div>`;
+    });
+  });
+  c.innerHTML=h;
+}
+
+// ── RENDER PARLAYS ────────────────────────────────────
+function renderParlays(){
+  const c=document.getElementById('cont-parlay');
+  const stake=parseFloat(document.getElementById('stakeInput').value)||0;
+  if(!GRUPOS.length){
+    c.innerHTML=`<div class="empty"><div class="empty-ico">🎰</div><div class="empty-tit">SIN PARLAYS</div><div class="empty-dsc">Los parlays se generan automáticamente cuando analizás una imagen en <strong style="color:var(--claude)">🤖 Doble IA</strong>.</div><div class="empty-arr">↓ Ir a Doble IA</div></div>`;
+    return;
+  }
+  const sorted=GRUPOS.flatMap(g=>g.matches.map(m=>{const f=favOf(m);return{match:`${m.local} vs ${m.visit}`,winner:f.name,odd:f.odd,p:f.p}})).sort((a,b)=>b.p-a.p);
+  const calcP=picks=>({picks,totalOdd:+(picks.reduce((a,p)=>a*p.odd,1).toFixed(2)),successProb:+(picks.reduce((a,p)=>a*(p.p/100),1)*100).toFixed(1)});
+  const types=[
+    {label:'🛡️ CONSERVADOR',color:'#00e676',data:calcP(sorted.slice(0,3)),desc:'3 picks — alta seguridad'},
+    {label:'⚖️ EQUILIBRADO', color:'#ffc107',data:calcP(sorted.slice(0,Math.min(5,sorted.length))),desc:'5 picks — balance'},
+    {label:'🔥 AGRESIVO',    color:'#ff4757',data:calcP(sorted),desc:'Todos los picks'},
+  ];
+  let h='';
+  types.forEach(({label,color,data,desc})=>{
+    const win=(stake*data.totalOdd).toFixed(0),profit=(win-stake).toFixed(0);
+    h+=`<div class="pcard" style="border-color:${color}22">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><span class="p-tit" style="color:${color}">${label}</span><span style="font-size:9px;color:var(--muted)">${desc}</span></div>`;
+    data.picks.forEach(pk=>{h+=`<div class="pp"><span style="font-size:9px;color:var(--muted)">✓</span><span class="pp-m">${pk.match}</span><span class="pp-w" style="color:${color}">${pk.winner} (${pk.odd})</span></div>`;});
+    h+=`<div class="p-foot">
+      <div><div class="pf-l">Cuota Total</div><div class="pf-v" style="color:${color}">${data.totalOdd}x</div></div>
+      <div><div class="pf-l">Prob. Éxito</div><div class="pf-v" style="color:${color}">${data.successProb}%</div></div>
+      ${stake>0?`<div class="pay-box"><div class="pay-l">Si apostás $${stake.toLocaleString()} ganás:</div><div class="pay-v" style="color:${color}">$${Number(win).toLocaleString()}</div><div class="pay-pr" style="color:var(--green)">+$${Number(profit).toLocaleString()} de ganancia</div></div>`:''}
+    </div></div>`;
+  });
+  h+=`<div class="disc">⚠️ Estimaciones matemáticas basadas en cuotas. No garantizan resultados. Jugá responsable.</div>`;
+  c.innerHTML=h;
+}
+
+// ── LIMPIAR TODO ──────────────────────────────────────
+function limpiarTodo(){
+  if(!GRUPOS.length&&!imgB64){alert('No hay datos que limpiar.');return;}
+  if(!confirm('¿Limpiar todos los datos e iniciar desde cero?'))return;
+  GRUPOS=[];imgB64=null;imgMime='image/jpeg';
+  resetDZ();
+  document.getElementById('btnRun').disabled=true;
+  document.getElementById('progBox').style.display='none';
+  document.getElementById('resArea').style.display='none';
+  document.getElementById('tokBan').style.display='none';
+  document.getElementById('conBox').style.display='none';
+  document.getElementById('cCard').style.display='none';
+  document.getElementById('dCard').style.display='none';
+  document.getElementById('cBod').textContent='';
+  document.getElementById('dBod').textContent='';
+  document.getElementById('conBod').textContent='';
+  document.getElementById('cTok').textContent='';
+  setStep(1,'⏳','Esperando...','var(--muted)');
+  setStep(2,'⏳','En cola...','var(--muted)');
+  setStep(3,'⏳','Pendiente...','var(--muted)');
+  setSt('c','idle','Listo');setSt('d','idle','Listo');
+  renderPartidos();renderParlays();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function resetDZ(){
+  const dz=document.getElementById('dz');
+  dz.innerHTML=`<div class="dz-ico">📸</div><div class="dz-txt">Tocá o arrastrá la imagen de cuotas</div><div class="dz-hint">JPG, PNG — cualquier casa de apuestas</div>`;
+  dz.onclick=()=>document.getElementById('fi').click();
+  document.getElementById('fi').value='';
+}
+
+// ── API KEYS ──────────────────────────────────────────
+function guardarKeys(){
+  const c=document.getElementById('ck').value.trim(),d=document.getElementById('dk').value.trim();
+  if(!c&&!d){alert('Ingresá al menos una clave.');return;}
+  try{if(c)localStorage.setItem('pp_c',c);if(d)localStorage.setItem('pp_d',d);flash();}
+  catch(e){alert('Error al guardar. localStorage puede estar bloqueado.');}
+}
+function cargarKeys(){
+  try{
+    const c=localStorage.getItem('pp_c'),d=localStorage.getItem('pp_d');
+    if(c)document.getElementById('ck').value=c;
+    if(d)document.getElementById('dk').value=d;
+    if(c||d)flash();
+  }catch(e){}
+}
+function borrarKeys(){
+  if(!confirm('¿Borrar claves guardadas en este dispositivo?'))return;
+  try{localStorage.removeItem('pp_c');localStorage.removeItem('pp_d');
+  document.getElementById('ck').value='';document.getElementById('dk').value='';
+  document.getElementById('ksb').style.display='none';alert('✅ Claves borradas.');}
+  catch(e){}
+}
+function flash(){const b=document.getElementById('ksb');b.style.display='block';setTimeout(()=>b.style.display='none',3000);}
+function toggleKey(id){const i=document.getElementById(id);i.type=i.type==='password'?'text':'password';}
+
+// ── IMAGE ─────────────────────────────────────────────
+function loadImg(file){
+  imgMime=file.type||'image/jpeg';
+  const r=new FileReader();
+  r.onload=ev=>{
+    const src=ev.target.result;imgB64=src.split(',')[1];
+    const dz=document.getElementById('dz');
+    dz.innerHTML=`<img src="${src}" class="prev" alt="preview">`;
+    dz.onclick=()=>document.getElementById('fi').click();
+    document.getElementById('btnRun').disabled=false;
+    document.getElementById('resArea').style.display='none';
+    document.getElementById('progBox').style.display='none';
+  };
+  r.readAsDataURL(file);
+}
+function onFile(e){if(e.target.files[0])loadImg(e.target.files[0]);}
+function onDrop(e){e.preventDefault();document.getElementById('dz').classList.remove('drag-over');if(e.dataTransfer.files[0])loadImg(e.dataTransfer.files[0]);}
+function onDragOver(e){e.preventDefault();document.getElementById('dz').classList.add('drag-over');}
+function onDragLeave(){document.getElementById('dz').classList.remove('drag-over');}
+
+// ── STATUS ────────────────────────────────────────────
+function setSt(ai,st,lbl){
+  const dot=document.getElementById(`dot-${ai}`),lb=document.getElementById(`lbl-${ai}`);
+  lb.textContent=lbl;dot.classList.remove('pulse');
+  if(st==='loading')dot.classList.add('pulse');
+  const c={idle:'var(--muted)',loading:ai==='c'?'var(--claude)':'var(--deep2)',ok:'var(--green)',error:'var(--red)',warn:'var(--orange)'};
+  dot.style.background=c[st]||'var(--muted)';
+}
+function setStep(n,ico,st,col){
+  const i=document.getElementById(`si${n}`),s=document.getElementById(`ss${n}`);
+  if(i)i.textContent=ico;if(s){s.textContent=st;s.style.color=col||'var(--muted)';}
+}
+function isTokErr(err){
+  const m=(err?.message||'').toLowerCase(),t=(err?.type||'').toLowerCase();
+  return err?.status===429||err?.status===402||t.includes('overload')||t.includes('rate_limit')||m.includes('credit')||m.includes('token')||m.includes('quota')||m.includes('limit')||m.includes('billing');
+}
+
+// ── PARSE JSON ────────────────────────────────────────
+function parseMatches(text){
+  const m=text.match(/```json\s*([\s\S]*?)```/i);
+  if(!m)return null;
+  try{
+    const d=JSON.parse(m[1]);
+    if(Array.isArray(d)&&d.length>0&&d[0].liga&&Array.isArray(d[0].matches))return d;
+  }catch(e){}
+  return null;
+}
+
+// ── CLAUDE API ────────────────────────────────────────
+async function callClaude(key,b64,mime){
+  const prompt=`Eres el mejor analista de apuestas deportivas. Analizá esta imagen de cuotas.
+
+ANÁLISIS por partido:
+• Prob implícita local/empate/visitante = (1/cuota)*100
+• Favorito matemático + nivel confianza (ALTA/MEDIA/BAJA)
+• Pick recomendado con razón breve
+
+PARLAYS sugeridos (conservador/equilibrado/agresivo) con cuota total.
+
+IMPORTANTE — al final incluí OBLIGATORIAMENTE este bloque JSON con todos los partidos de la imagen:
+
+\`\`\`json
+[{"liga":"🏴 Liga Nombre","matches":[{"local":"Equipo A","visit":"Equipo B","hora":"15:00","o1":1.80,"ox":3.50,"o2":4.20}]}]
+\`\`\`
+
+Usa el formato exacto. Sin el JSON no puedo llenar los paneles de Partidos y Parlays.
+Respondé en español con emojis.`;
+
+  let res,data;
+  try{
+    res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:2000,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mime,data:b64}},{type:'text',text:prompt}]}]})
+    });
+    data=await res.json();
+  }catch(fe){throw new Error('Error de red con Claude: '+fe.message);}
+  if(data.error){const e=new Error('Claude: '+data.error.message);e.type=data.error.type;e.status=res.status;throw e;}
+  return{text:(data.content||[]).map(c=>c.text||'').join('\n'),tokens:data.usage?.output_tokens};
+}
+
+// ── DEEPSEEK API ──────────────────────────────────────
+const DS='https://api.deepseek.com/v1/chat/completions';
+const DPX='https://corsproxy.io/?url=';
+
+async function callDeepSeek(key,claudeTxt){
+  const prompt=claudeTxt
+    ?`Analista de apuestas. Claude analizó estos partidos:\n\n${claudeTxt}\n\nValidá:\n1. ✅ Coincidencias\n2. ⚠️ Diferencias (explicá)\n3. 🎯 Tu pick más seguro\n4. 💡 Consejo adicional\nRespondé en español.`
+    :'Sin análisis previo disponible.';
+  const body=JSON.stringify({model:'deepseek-chat',max_tokens:800,messages:[{role:'user',content:prompt}]});
+  const headers={'Content-Type':'application/json','Authorization':`Bearer ${key}`};
+  let lastErr=null;
+  for(const url of[DS,DPX+encodeURIComponent(DS)]){
+    try{
+      const res=await fetch(url,{method:'POST',headers,body});
+      const d=await res.json();
+      if(d.error)throw new Error('DeepSeek: '+(d.error.message||JSON.stringify(d.error)));
+      return d.choices?.[0]?.message?.content||'Sin respuesta';
+    }catch(err){
+      lastErr=err;
+      const m=(err.message||'').toLowerCase();
+      if(m.includes('cors')||m.includes('network')||m.includes('failed to fetch'))continue;
+      throw err;
+    }
+  }
+  throw new Error('DeepSeek no disponible: '+(lastErr?.message||'Error'));
+}
+
+// ── MAIN ANALYSIS ─────────────────────────────────────
+async function runAnalysis(){
+  const cKey=document.getElementById('ck').value.trim();
+  const dKey=document.getElementById('dk').value.trim();
+  if(!cKey&&!dKey){alert('Ingresá al menos una API Key.');return;}
+  if(!imgB64){alert('Primero seleccioná una imagen.');return;}
+
+  document.getElementById('btnRun').disabled=true;
+  document.getElementById('progBox').style.display='block';
+  document.getElementById('resArea').style.display='none';
+  document.getElementById('tokBan').style.display='none';
+  document.getElementById('cCard').style.display='none';
+  document.getElementById('dCard').style.display='none';
+  document.getElementById('conBox').style.display='none';
+  setStep(1,'⏳','Analizando...','var(--claude)');
+  setStep(2,'⏳','En cola...','var(--muted)');
+  setStep(3,'⏳','Pendiente...','var(--muted)');
+  setSt('c','loading','Analizando...');setSt('d','loading','En cola...');
+
+  let cTxt=null,dTxt=null,tokErr=false;
+
+  // CLAUDE
+  if(cKey){
+    try{
+      const{text,tokens}=await callClaude(cKey,imgB64,imgMime);
+      cTxt=text;
+      setStep(1,'✅','Completado','var(--green)');setSt('c','ok','✓ Activo');
+      document.getElementById('cBod').textContent=text;
+      document.getElementById('cCard').style.display='block';
+      if(tokens)document.getElementById('cTok').textContent=`${tokens} tokens`;
+    }catch(err){
+      tokErr=isTokErr(err);
+      setStep(1,tokErr?'⚠️':'❌',tokErr?'Sin tokens/créditos':(err.message||'Error').substring(0,40),tokErr?'var(--orange)':'var(--red)');
+      setSt('c',tokErr?'warn':'error',tokErr?'⚠️ Sin tokens':'❌ Error');
+      document.getElementById('cBod').textContent='⚠️ ERROR:\n'+err.message;
+      document.getElementById('cCard').style.display='block';
+    }
+  }else{setStep(1,'⏭️','Sin API Key','var(--muted)');setSt('c','idle','Sin key');}
+
+  // DEEPSEEK
+  setStep(2,'⏳','Validando...','var(--deep2)');setSt('d','loading','Validando...');
+  if(dKey){
+    try{
+      dTxt=await callDeepSeek(dKey,cTxt);
+      setStep(2,'✅','Completado','var(--green)');setSt('d','ok','✓ Activo');
+      document.getElementById('dBod').textContent=dTxt;
+      document.getElementById('dCard').style.display='block';
+    }catch(err){
+      setStep(2,'❌',(err.message||'Error').substring(0,35),'var(--red)');
+      setSt('d','error','❌ Error');
+      document.getElementById('dBod').textContent='⚠️ ERROR:\n'+err.message;
+      document.getElementById('dCard').style.display='block';
+    }
+  }else{setStep(2,'⏭️','Sin API Key','var(--muted)');setSt('d','idle','Sin key');}
+
+  // AUTO-LLENAR PARTIDOS Y PARLAYS
+  setStep(3,'⏳','Procesando...','var(--green)');
+  await new Promise(r=>setTimeout(r,300));
+  if(cTxt){
+    const parsed=parseMatches(cTxt);
+    if(parsed){
+      GRUPOS=parsed;renderPartidos();renderParlays();
+      const tot=GRUPOS.reduce((a,g)=>a+g.matches.length,0);
+      setStep(3,'✅',`${tot} partidos cargados en los paneles`,'var(--green)');
+    }else{
+      setStep(3,'⚠️','JSON no detectado — revisá análisis Claude','var(--orange)');
+    }
+  }else{setStep(3,'⏭️','Sin datos de Claude para autocompletar','var(--muted)');}
+
+  // CONSENSUS
+  if(cTxt&&dTxt){
+    document.getElementById('conBod').textContent='Claude analizó la imagen y extrajo los datos matemáticamente.\nDeepSeek validó los picks con visión cruzada.\n\n🏆 Picks con DOBLE CONFIRMACIÓN = máxima confianza.\n⚠️ En discordias = elegí cuota más baja o excluí del parley.\n\n💡 Claude = certeza matemática | DeepSeek = validación contextual';
+    document.getElementById('conBox').style.display='block';
+  }
+  if(tokErr)document.getElementById('tokBan').style.display='block';
+
+  document.getElementById('resArea').style.display='block';
+  document.getElementById('resArea').scrollIntoView({behavior:'smooth'});
+  document.getElementById('btnRun').disabled=false;
+}
+
+// ── TABS ──────────────────────────────────────────────
+function showTab(id,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── INIT ──────────────────────────────────────────────
+cargarKeys();
+renderPartidos();
+renderParlays();
+</script>
+</body>
+</html>
